@@ -16,8 +16,14 @@
 // Драйверы моторов
 #include "drivers/motor/tb6612fng.h"
 
+// Керування моторами через кнопки
+#include "button_control.h"
+
 // Датчики (закомментировано - нет физических датчиков)
 // #include "drivers/sensors/encoder.h"
+
+// Тестовые функции (для проверки без моторов)
+// #include "motor_test.h"
 
 // ============================================================================
 // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ (Таймеры для PWM)
@@ -76,6 +82,9 @@ int main(void)
     TB6612FNG_Init(&htim3, &htim4, &htim1, &htim2);
     TB6612FNG_EnableAll();
 
+    // Инициализация кнопок и LED для керування
+    ButtonControl_Init();
+
     // Инициализация энкодеров (закомментировано - нет физических датчиков)
     // Encoder_Init();
 
@@ -124,38 +133,25 @@ int main(void)
     }
     */
 
-    // ========== ТЕСТОВЫЙ РЕЖИМ (пока нет энкодеров) ==========
+    // ========== РЕЖИМ КЕРУВАННЯ ЧЕРЕЗ КНОПКИ ==========
+
+    printf("\n*** Button Control Mode Active ***\n");
+    printf("Press BTN_0-3 to control motors 0-3\n");
+    printf("Hold button to run motor + LED\n");
+    printf("Release button to stop motor + LED\n\n");
+
+    // Головний цикл: опитування кнопок і керування моторами
     while (1)
     {
-        // LED мигает для индикации работы
-        HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+        // Опитування кнопок та керування моторами + LED
+        ButtonControl_Update();
 
-        // Раскомментируйте для тестирования моторов:
-
-        // Тест 1: Все моторы вперёд на 2 секунды
-        // TB6612FNG_MoveForward(50);
-        // HAL_Delay(2000);
-        // TB6612FNG_StopAll();
-        // HAL_Delay(1000);
-
-        // Тест 2: Все моторы назад на 2 секунды
-        // TB6612FNG_MoveBackward(50);
-        // HAL_Delay(2000);
-        // TB6612FNG_StopAll();
-        // HAL_Delay(1000);
-
-        // Тест 3: Поворот влево
-        // TB6612FNG_TurnLeft(60, 50);
-        // HAL_Delay(1500);
-        // TB6612FNG_StopAll();
-        // HAL_Delay(1000);
-
-        // Тест 4: Один мотор вперёд
-        // TB6612FNG_Drive(MOTOR_0, MOTOR_FORWARD, 70);
-        // HAL_Delay(2000);
-        // TB6612FNG_Stop(MOTOR_0);
-
-        HAL_Delay(500); // Мигание LED каждые 500мс
+        // LED PC13 моргає для індикації роботи системи
+        static uint32_t last_blink = 0;
+        if (HAL_GetTick() - last_blink >= 1000) {
+            HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
+            last_blink = HAL_GetTick();
+        }
     }
 }
 

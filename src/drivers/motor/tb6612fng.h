@@ -83,7 +83,7 @@ typedef struct {
 
 // Driver 1 Standby
 #define DRIVER_1_STBY_PORT      GPIOB
-#define DRIVER_1_STBY_PIN       GPIO_PIN_11
+#define DRIVER_1_STBY_PIN       GPIO_PIN_14
 
 // ============================================================================
 // Pin Definitions - Driver 2 (Motors 2, 3)

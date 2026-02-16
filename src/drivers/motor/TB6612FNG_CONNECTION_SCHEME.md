@@ -50,8 +50,8 @@
 
 - [x] TOP [ + ] rail = 3.3V (from ESP32 3V3 output) ✅
 - [x] TOP [ - ] rail = GND (common ground) ✅
-- [ ] BOTTOM [ + ] rail = 6-12V (external motor power)
-- [ ] BOTTOM [ - ] rail = GND (motor power ground)
+- [x] BOTTOM [ + ] rail = 6-12V (external motor power)
+- [x] BOTTOM [ - ] rail = GND (motor power ground)
 - [x] **CRITICAL:** TOP [ - ] connected to BOTTOM [ - ] (vertical jumper!) ✅
 
 ### 3️⃣ UART Communication (ESP32 ↔ Black Pill)
@@ -63,27 +63,27 @@
 
 ### 4️⃣ Driver 1 Control Signals (Black Pill → TB6612FNG #1)
 
-- [x] 3V3 → VCC (Driver 1) ✅
-- [x] GND → GND (Driver 1) ✅
-- [x] PB0 → PWMA ✅
-- [x] PB1 → AIN1 ✅
-- [x] PB10 → AIN2 ✅
-- [x] PB14 → STBY ✅
-- [x] PB12 → BIN1 ✅
-- [x] PB13 → BIN2 ✅
-- [x] PB7 → PWMB ✅
+- [x] 3V3 → VCC (Driver 1) ✅ ✅
+- [x] GND → GND (Driver 1) ✅ ✅
+- [x] PB0 → PWMA ✅ ✅
+- [x] PB1 → AIN1 ✅ ✅
+- [x] PB10 → AIN2 ✅ ✅
+- [x] PB14 → STBY ✅ ✅
+- [x] PB12 → BIN1 ✅ ✅
+- [x] PB13 → BIN2 ✅ ✅
+- [x] PB7 → PWMB ✅ ✅
 
 ### 5️⃣ Driver 2 Control Signals (Black Pill → TB6612FNG #2)
 
-- [x] 3V3 → VCC (Driver 2) ✅
-- [x] GND → GND (Driver 2) ✅
-- [x] PA8 → PWMA ✅
-- [x] PA0 → AIN1 ✅
-- [x] PA1 → AIN2 ✅
-- [x] PA4 → STBY ✅
-- [x] PA2 → BIN1 ✅
-- [x] PA3 → BIN2 ✅
-- [x] PA15 → PWMB ✅
+- [x] 3V3 → VCC (Driver 2) ✅ ✅
+- [x] GND → GND (Driver 2) ✅ ✅
+- [x] PA8 → PWMA ✅ ✅
+- [x] PA0 → AIN1 ✅ ✅
+- [x] PA1 → AIN2 ✅ ✅
+- [x] PA4 → STBY ✅ ✅
+- [x] PA2 → BIN1 ✅ ✅
+- [x] PA3 → BIN2 ✅ ✅
+- [x] PA15 → PWMB ✅ ✅
 
 ### 6️⃣ External Motor Power (6-12V)
 
@@ -92,7 +92,7 @@
 - [x] (-) wire → BOTTOM [ - ] rail ✅
 - [x] TB6612FNG #1 VM pin connected to BOTTOM [ + ] rail ✅
 - [x] TB6612FNG #2 VM pin connected to BOTTOM [ + ] rail ✅
-- [ ] Polarity checked (+ and - correct)
+- [x] Polarity checked (+ and - correct)
 - [ ] **Capacitor 100-1000µF** on VM line (recommended for stability)
 
 ### 7️⃣ Motor Connections
@@ -104,11 +104,11 @@
 
 ### 8️⃣ Final Verification
 
-- [ ] All connections secure (no loose wires)
-- [ ] No short circuits visible
-- [ ] Power polarity correct (+/-)
-- [ ] Common GND between all components
-- [ ] Wires not stressed or twisted
+- [x] All connections secure (no loose wires)
+- [x] No short circuits visible
+- [x] Power polarity correct (+/-)
+- [x] Common GND between all components
+- [x] Wires not stressed or twisted
 - [ ] ESP32 USB cable ready for power
 - [ ] Black Pill USB cable ready for programming
 
