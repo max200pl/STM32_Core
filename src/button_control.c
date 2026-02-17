@@ -218,12 +218,28 @@ void ButtonControl_Update(void)
                    i, i, MOTOR_DEFAULT_SPEED);
             TB6612FNG_Drive((Motor_ID)i, MOTOR_DIRECTION, MOTOR_DEFAULT_SPEED);
             ButtonControl_LED_On(i);
+
+            /* Send telemetry to ESP32 */
+            #ifdef USE_UART_TELEMETRY
+            extern void Telemetry_SendButton(uint8_t button_id, uint8_t is_pressed);
+            extern void Telemetry_SendMotor(uint8_t motor_id, uint8_t direction, uint8_t speed);
+            Telemetry_SendButton(i, 1);  // Button pressed
+            Telemetry_SendMotor(i, MOTOR_DIRECTION, MOTOR_DEFAULT_SPEED);
+            #endif
         }
         else if (!is_pressed && button_prev_state[i]) {
             /* Button just released - stop motor and turn off LED */
             printf("BTN_%d released → Motor %d OFF + LED OFF\n", i, i);
             TB6612FNG_Stop((Motor_ID)i);
             ButtonControl_LED_Off(i);
+
+            /* Send telemetry to ESP32 */
+            #ifdef USE_UART_TELEMETRY
+            extern void Telemetry_SendButton(uint8_t button_id, uint8_t is_pressed);
+            extern void Telemetry_SendMotor(uint8_t motor_id, uint8_t direction, uint8_t speed);
+            Telemetry_SendButton(i, 0);  // Button released
+            Telemetry_SendMotor(i, 0, 0);  // Motor stopped
+            #endif
         }
 
         /* Update previous state */

@@ -19,6 +19,12 @@
 // Керування моторами через кнопки
 #include "button_control.h"
 
+// UART телеметрия (отправка данных на ESP32)
+#define USE_UART_TELEMETRY
+#ifdef USE_UART_TELEMETRY
+#include "uart_telemetry.h"
+#endif
+
 // Датчики (закомментировано - нет физических датчиков)
 // #include "drivers/sensors/encoder.h"
 
@@ -81,6 +87,12 @@ int main(void)
     // Инициализация драйвера моторов TB6612FNG
     TB6612FNG_Init(&htim3, &htim4, &htim1, &htim2);
     TB6612FNG_EnableAll();
+
+    // Инициализация UART телеметрии (отправка данных на ESP32)
+    #ifdef USE_UART_TELEMETRY
+    Telemetry_Init();
+    Telemetry_SendString("STM32 Black Pill Ready!\n");
+    #endif
 
     // Инициализация кнопок и LED для керування
     ButtonControl_Init();
