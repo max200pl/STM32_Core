@@ -42,6 +42,15 @@ TIM_HandleTypeDef htim3; // Motor 0 (PWM на PB0)
 TIM_HandleTypeDef htim4; // Motor 1 (PWM на PB7)
 
 // ============================================================================
+// UART RX (interrupt-based, one byte at a time)
+// ============================================================================
+static uint8_t           uart_rx_byte;
+static char              uart_rx_buf[64];
+static uint8_t           uart_rx_pos = 0;
+static volatile uint8_t  uart_cmd_ready = 0;
+static char              uart_cmd_buf[64];
+
+// ============================================================================
 // ПРОТОТИПЫ ФУНКЦИЙ
 // ============================================================================
 
@@ -94,6 +103,8 @@ int main(void)
     #ifdef USE_UART_TELEMETRY
     Telemetry_Init();
     Telemetry_SendString("STM32 Black Pill Ready!\n");
+    // Start interrupt-based RX (re-armed in callback after each byte)
+    HAL_UART_Receive_IT(&huart1, &uart_rx_byte, 1);
     #endif
 
     // Инициализация кнопок и LED для керування
@@ -160,27 +171,12 @@ int main(void)
         // Опитування кнопок та керування моторами + LED
         ButtonControl_Update();
 
-        // Receive commands from ESP32 via UART
-        #ifdef USE_UART_TELEMETRY
+        // Dispatch UART command assembled in ISR
+        if (uart_cmd_ready)
         {
-            static char rx_buf[64];
-            static uint8_t rx_pos = 0;
-            if (__HAL_UART_GET_FLAG(&huart1, UART_FLAG_RXNE))
-            {
-                char c = (char)(huart1.Instance->DR & 0xFF);
-                if (c == '\n' || rx_pos >= 62)
-                {
-                    rx_buf[rx_pos] = '\0';
-                    rx_pos = 0;
-                    if (rx_buf[0] != '\0') HandleRemoteCommand(rx_buf);
-                }
-                else if (c != '\r')
-                {
-                    rx_buf[rx_pos++] = c;
-                }
-            }
+            uart_cmd_ready = 0;
+            HandleRemoteCommand(uart_cmd_buf);
         }
-        #endif
 
         // LED PC13 моргає для індикації роботи системи
         static uint32_t last_blink = 0;
@@ -210,25 +206,76 @@ static void HandleRemoteCommand(const char *cmd)
     if (action == 'F') {
         sscanf(cmd + 4, "%d", &speed);
         TB6612FNG_MoveForward((uint8_t)speed);
+        /* Forward: all LEDs on */
+        for (uint8_t i = 0; i < 4; i++) ButtonControl_LED_On(i);
     } else if (action == 'B') {
         sscanf(cmd + 4, "%d", &speed);
         TB6612FNG_MoveBackward((uint8_t)speed);
+        /* Backward: all LEDs on */
+        for (uint8_t i = 0; i < 4; i++) ButtonControl_LED_On(i);
     } else if (action == 'L') {
         sscanf(cmd + 4, "%d", &speed);
         TB6612FNG_TurnLeft((uint8_t)speed, 60);
+        /* Left turn indicator: left side (0,2) on, right side (1,3) off */
+        ButtonControl_LED_On(0);  ButtonControl_LED_Off(1);
+        ButtonControl_LED_On(2);  ButtonControl_LED_Off(3);
     } else if (action == 'R') {
         sscanf(cmd + 4, "%d", &speed);
         TB6612FNG_TurnRight((uint8_t)speed, 60);
+        /* Right turn indicator: right side (1,3) on, left side (0,2) off */
+        ButtonControl_LED_Off(0); ButtonControl_LED_On(1);
+        ButtonControl_LED_Off(2); ButtonControl_LED_On(3);
     } else if (action == 'S') {
         TB6612FNG_StopAll();
+        for (uint8_t i = 0; i < 4; i++) ButtonControl_LED_Off(i);
     } else if (action == 'M') {
         int motor_id; char dir_c;
         if (sscanf(cmd + 4, "%d:%c:%d", &motor_id, &dir_c, &speed) == 3) {
             Motor_Direction dir = (dir_c == 'F') ? MOTOR_FORWARD :
                                   (dir_c == 'B') ? MOTOR_REVERSE : MOTOR_STOP;
             TB6612FNG_Drive((Motor_ID)motor_id, dir, (uint8_t)speed);
+            if (dir == MOTOR_STOP)
+                ButtonControl_LED_Off((uint8_t)motor_id);
+            else
+                ButtonControl_LED_On((uint8_t)motor_id);
         }
     }
+}
+
+// ============================================================================
+// UART RX INTERRUPT CALLBACK
+// ============================================================================
+
+/**
+ * @brief Called by HAL after each received byte (interrupt-driven)
+ *        Re-arms itself to keep receiving.
+ */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if (huart->Instance != USART1) return;
+
+    char c = (char)uart_rx_byte;
+
+    if (c == '\n' || uart_rx_pos >= 62)
+    {
+        uart_rx_buf[uart_rx_pos] = '\0';
+        uart_rx_pos = 0;
+        // Only copy to dispatch buffer if previous command was already consumed
+        if (uart_rx_buf[0] != '\0' && !uart_cmd_ready)
+        {
+            uint8_t i = 0;
+            while (uart_rx_buf[i] && i < 63) { uart_cmd_buf[i] = uart_rx_buf[i]; i++; }
+            uart_cmd_buf[i] = '\0';
+            uart_cmd_ready = 1;
+        }
+    }
+    else if (c != '\r')
+    {
+        uart_rx_buf[uart_rx_pos++] = c;
+    }
+
+    // Re-arm for next byte
+    HAL_UART_Receive_IT(huart, &uart_rx_byte, 1);
 }
 
 // ============================================================================

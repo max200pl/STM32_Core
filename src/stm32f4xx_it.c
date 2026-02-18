@@ -1,4 +1,5 @@
 #include "stm32f4xx_it.h"
+#include "uart_telemetry.h"  // for extern huart1
 
 void NMI_Handler(void)
 {
@@ -47,4 +48,9 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   HAL_IncTick();
+}
+
+void USART1_IRQHandler(void)
+{
+  HAL_UART_IRQHandler(&huart1);
 }
