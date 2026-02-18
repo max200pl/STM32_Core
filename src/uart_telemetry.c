@@ -86,7 +86,7 @@ void Telemetry_SendButton(uint8_t button_id, uint8_t is_pressed)
                        is_pressed ? "pressed" : "released");
 
     if (len > 0 && len < TELEMETRY_BUFFER_SIZE) {
-        HAL_UART_Transmit(&huart1, (uint8_t*)telemetry_buffer, len, HAL_MAX_DELAY);
+        HAL_UART_Transmit(&huart1, (uint8_t*)telemetry_buffer, len, 100);
     }
 }
 
@@ -96,14 +96,19 @@ void Telemetry_SendButton(uint8_t button_id, uint8_t is_pressed)
  */
 void Telemetry_SendMotor(uint8_t motor_id, uint8_t direction, uint8_t speed)
 {
-    const char* dir_str = (direction == 0) ? "forward" : "backward";
+    const char* dir_str;
+    switch (direction) {
+        case 1:  dir_str = "forward";  break;  /* MOTOR_FORWARD */
+        case 2:  dir_str = "backward"; break;  /* MOTOR_REVERSE */
+        default: dir_str = "stop";     break;  /* MOTOR_STOP */
+    }
 
     int len = snprintf(telemetry_buffer, TELEMETRY_BUFFER_SIZE,
                        "{\"motor\":%d,\"direction\":\"%s\",\"speed\":%d}\n",
                        motor_id, dir_str, speed);
 
     if (len > 0 && len < TELEMETRY_BUFFER_SIZE) {
-        HAL_UART_Transmit(&huart1, (uint8_t*)telemetry_buffer, len, HAL_MAX_DELAY);
+        HAL_UART_Transmit(&huart1, (uint8_t*)telemetry_buffer, len, 100);
     }
 }
 
@@ -121,7 +126,7 @@ void Telemetry_SendAllMotors(uint8_t* motor_states, uint8_t* motor_speeds)
                        motor_states[3] ? "running" : "stopped", motor_speeds[3]);
 
     if (len > 0 && len < TELEMETRY_BUFFER_SIZE) {
-        HAL_UART_Transmit(&huart1, (uint8_t*)telemetry_buffer, len, HAL_MAX_DELAY);
+        HAL_UART_Transmit(&huart1, (uint8_t*)telemetry_buffer, len, 100);
     }
 }
 
@@ -136,7 +141,7 @@ void Telemetry_SendRPM(uint8_t motor_id, float rpm)
                        motor_id, rpm);
 
     if (len > 0 && len < TELEMETRY_BUFFER_SIZE) {
-        HAL_UART_Transmit(&huart1, (uint8_t*)telemetry_buffer, len, HAL_MAX_DELAY);
+        HAL_UART_Transmit(&huart1, (uint8_t*)telemetry_buffer, len, 100);
     }
 }
 
@@ -150,7 +155,7 @@ void Telemetry_SendJSON(const char* json_string)
         HAL_UART_Transmit(&huart1, (uint8_t*)json_string, len, HAL_MAX_DELAY);
         // Add newline if not present
         if (json_string[len - 1] != '\n') {
-            HAL_UART_Transmit(&huart1, (uint8_t*)"\n", 1, HAL_MAX_DELAY);
+            HAL_UART_Transmit(&huart1, (uint8_t*)"\n", 1, 100);
         }
     }
 }
@@ -162,6 +167,6 @@ void Telemetry_SendString(const char* message)
 {
     int len = strlen(message);
     if (len > 0) {
-        HAL_UART_Transmit(&huart1, (uint8_t*)message, len, HAL_MAX_DELAY);
+        HAL_UART_Transmit(&huart1, (uint8_t*)message, len, 100);
     }
 }

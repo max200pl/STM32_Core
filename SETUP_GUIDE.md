@@ -7,8 +7,8 @@
 - [ ] STM32F411CEU6 Black Pill
 - [ ] ESP32-WROOM-32D
 - [ ] ST-Link V2 programmer
-- [ ] 3 wires (GND, TX, RX)
-- [ ] 2 USB cables
+- [ ] 4 wires (GND, TX, RX, 5V)
+- [ ] 1 USB cable (for ESP32 only)
 
 ### Software
 
@@ -22,16 +22,17 @@
 
 ### Connect STM32 ↔ ESP32
 
-- [ ] STM32 PA9 (TX) → ESP32 GPIO3 (RX)
-- [ ] STM32 PA10 (RX) → ESP32 GPIO1 (TX)
-- [ ] STM32 GND → ESP32 GND
+- [x] STM32 PA9 (TX) → ESP32 **RXD0** (GPIO3)
+- [x] STM32 PA10 (RX) → ESP32 **TXD0** (GPIO1)
+- [x] STM32 GND → ESP32 **GND**
+- [x] STM32 5V → ESP32 **5V** (top-left pin)
 
 ⚠️ **Important:**
 
 - TX → RX, RX → TX (crossover connection)
 - Common GND required
-- Do NOT connect VCC/3V3 between boards
-- Each board has separate USB power
+- Connect **5V to 5V** (NOT 3.3V to 3.3V!)
+- USB connected to ESP32 only — ESP32 powers STM32 via 5V pin
 
 ---
 

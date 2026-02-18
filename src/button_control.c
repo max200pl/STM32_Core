@@ -201,51 +201,82 @@ void ButtonControl_LED_Toggle(uint8_t led_id)
     HAL_GPIO_TogglePin(port, pin);
 }
 
+/* D-pad layout:
+ *  BTN_0 (PB3)  → Forward  (all motors forward)
+ *  BTN_1 (PB4)  → Left     (rotate left in place)
+ *  BTN_2 (PC14) → Right    (rotate right in place)
+ *  BTN_3 (PC15) → Backward (all motors backward)
+ */
+
+#ifdef USE_UART_TELEMETRY
+extern void Telemetry_SendButton(uint8_t button_id, uint8_t is_pressed);
+extern void Telemetry_SendMotor(uint8_t motor_id, uint8_t direction, uint8_t speed);
+#endif
+
+/* Send telemetry for all 4 motors at once */
+static void SendAllMotors(uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3, uint8_t spd)
+{
+    #ifdef USE_UART_TELEMETRY
+    Telemetry_SendMotor(0, d0, spd);
+    Telemetry_SendMotor(1, d1, spd);
+    Telemetry_SendMotor(2, d2, spd);
+    Telemetry_SendMotor(3, d3, spd);
+    #endif
+}
+
 /**
- * @brief Main control loop - reads buttons and controls motors
+ * @brief Main control loop - D-pad style robot control
  * Call this function in main() while(1) loop
  */
 void ButtonControl_Update(void)
 {
-    /* Check each button and control corresponding motor + LED */
     for (uint8_t i = 0; i < BUTTON_COUNT; i++) {
         uint8_t is_pressed = ButtonControl_IsPressed((Button_ID)i);
 
-        /* Detect button press (edge detection) */
         if (is_pressed && !button_prev_state[i]) {
-            /* Button just pressed - start motor and turn on LED */
-            printf("BTN_%d pressed → Motor %d ON (%d%%) + LED ON\n",
-                   i, i, MOTOR_DEFAULT_SPEED);
-            TB6612FNG_Drive((Motor_ID)i, MOTOR_DIRECTION, MOTOR_DEFAULT_SPEED);
+            /* Button pressed - execute movement */
             ButtonControl_LED_On(i);
-
-            /* Send telemetry to ESP32 */
             #ifdef USE_UART_TELEMETRY
-            extern void Telemetry_SendButton(uint8_t button_id, uint8_t is_pressed);
-            extern void Telemetry_SendMotor(uint8_t motor_id, uint8_t direction, uint8_t speed);
-            Telemetry_SendButton(i, 1);  // Button pressed
-            Telemetry_SendMotor(i, MOTOR_DIRECTION, MOTOR_DEFAULT_SPEED);
+            Telemetry_SendButton(i, 1);
             #endif
+
+            switch (i) {
+                case 0: /* Forward */
+                    printf("BTN_0 → FORWARD %d%%\n", MOTOR_DEFAULT_SPEED);
+                    TB6612FNG_MoveForward(MOTOR_DEFAULT_SPEED);
+                    SendAllMotors(MOTOR_FORWARD, MOTOR_FORWARD, MOTOR_FORWARD, MOTOR_FORWARD, MOTOR_DEFAULT_SPEED);
+                    break;
+                case 1: /* Left (rotate in place) */
+                    printf("BTN_1 → ROTATE LEFT %d%%\n", MOTOR_DEFAULT_SPEED);
+                    TB6612FNG_RotateLeft(MOTOR_DEFAULT_SPEED);
+                    SendAllMotors(MOTOR_REVERSE, MOTOR_FORWARD, MOTOR_REVERSE, MOTOR_FORWARD, MOTOR_DEFAULT_SPEED);
+                    break;
+                case 2: /* Right (rotate in place) */
+                    printf("BTN_2 → ROTATE RIGHT %d%%\n", MOTOR_DEFAULT_SPEED);
+                    TB6612FNG_RotateRight(MOTOR_DEFAULT_SPEED);
+                    SendAllMotors(MOTOR_FORWARD, MOTOR_REVERSE, MOTOR_FORWARD, MOTOR_REVERSE, MOTOR_DEFAULT_SPEED);
+                    break;
+                case 3: /* Backward */
+                    printf("BTN_3 → BACKWARD %d%%\n", MOTOR_DEFAULT_SPEED);
+                    TB6612FNG_MoveBackward(MOTOR_DEFAULT_SPEED);
+                    SendAllMotors(MOTOR_REVERSE, MOTOR_REVERSE, MOTOR_REVERSE, MOTOR_REVERSE, MOTOR_DEFAULT_SPEED);
+                    break;
+            }
         }
         else if (!is_pressed && button_prev_state[i]) {
-            /* Button just released - stop motor and turn off LED */
-            printf("BTN_%d released → Motor %d OFF + LED OFF\n", i, i);
-            TB6612FNG_Stop((Motor_ID)i);
+            /* Button released - stop all motors */
+            printf("BTN_%d released → STOP ALL\n", i);
+            TB6612FNG_StopAll();
             ButtonControl_LED_Off(i);
 
-            /* Send telemetry to ESP32 */
             #ifdef USE_UART_TELEMETRY
-            extern void Telemetry_SendButton(uint8_t button_id, uint8_t is_pressed);
-            extern void Telemetry_SendMotor(uint8_t motor_id, uint8_t direction, uint8_t speed);
-            Telemetry_SendButton(i, 0);  // Button released
-            Telemetry_SendMotor(i, 0, 0);  // Motor stopped
+            Telemetry_SendButton(i, 0);
+            SendAllMotors(MOTOR_STOP, MOTOR_STOP, MOTOR_STOP, MOTOR_STOP, 0);
             #endif
         }
 
-        /* Update previous state */
         button_prev_state[i] = is_pressed;
     }
 
-    /* Small delay to debounce buttons */
     HAL_Delay(10);
 }

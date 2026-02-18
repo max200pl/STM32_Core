@@ -12,6 +12,7 @@
 // Системные библиотеки STM32
 #include "main.h"
 #include <stdio.h>
+#include <string.h>
 
 // Драйверы моторов
 #include "drivers/motor/tb6612fng.h"
@@ -51,6 +52,7 @@ static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
 void Error_Handler(void);
+static void HandleRemoteCommand(const char *cmd);
 
 // ============================================================================
 // ГЛАВНАЯ ПРОГРАММА
@@ -158,11 +160,73 @@ int main(void)
         // Опитування кнопок та керування моторами + LED
         ButtonControl_Update();
 
+        // Receive commands from ESP32 via UART
+        #ifdef USE_UART_TELEMETRY
+        {
+            static char rx_buf[64];
+            static uint8_t rx_pos = 0;
+            if (__HAL_UART_GET_FLAG(&huart1, UART_FLAG_RXNE))
+            {
+                char c = (char)(huart1.Instance->DR & 0xFF);
+                if (c == '\n' || rx_pos >= 62)
+                {
+                    rx_buf[rx_pos] = '\0';
+                    rx_pos = 0;
+                    if (rx_buf[0] != '\0') HandleRemoteCommand(rx_buf);
+                }
+                else if (c != '\r')
+                {
+                    rx_buf[rx_pos++] = c;
+                }
+            }
+        }
+        #endif
+
         // LED PC13 моргає для індикації роботи системи
         static uint32_t last_blink = 0;
         if (HAL_GetTick() - last_blink >= 1000) {
             HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
             last_blink = HAL_GetTick();
+        }
+    }
+}
+
+// ============================================================================
+// REMOTE COMMAND HANDLER (from ESP32 via UART)
+// ============================================================================
+
+/**
+ * @brief Parse and execute command received from ESP32
+ * Format: "C:F:70" = forward 70%, "C:B:70" = backward, "C:L:70" = left,
+ *         "C:R:70" = right, "C:S" = stop, "C:M:0:F:70" = motor 0 fwd 70%
+ */
+static void HandleRemoteCommand(const char *cmd)
+{
+    if (strncmp(cmd, "C:", 2) != 0) return;
+
+    char action = cmd[2];
+    int speed = 70;
+
+    if (action == 'F') {
+        sscanf(cmd + 4, "%d", &speed);
+        TB6612FNG_MoveForward((uint8_t)speed);
+    } else if (action == 'B') {
+        sscanf(cmd + 4, "%d", &speed);
+        TB6612FNG_MoveBackward((uint8_t)speed);
+    } else if (action == 'L') {
+        sscanf(cmd + 4, "%d", &speed);
+        TB6612FNG_TurnLeft((uint8_t)speed, 60);
+    } else if (action == 'R') {
+        sscanf(cmd + 4, "%d", &speed);
+        TB6612FNG_TurnRight((uint8_t)speed, 60);
+    } else if (action == 'S') {
+        TB6612FNG_StopAll();
+    } else if (action == 'M') {
+        int motor_id; char dir_c;
+        if (sscanf(cmd + 4, "%d:%c:%d", &motor_id, &dir_c, &speed) == 3) {
+            Motor_Direction dir = (dir_c == 'F') ? MOTOR_FORWARD :
+                                  (dir_c == 'B') ? MOTOR_REVERSE : MOTOR_STOP;
+            TB6612FNG_Drive((Motor_ID)motor_id, dir, (uint8_t)speed);
         }
     }
 }
