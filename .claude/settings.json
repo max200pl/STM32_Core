@@ -7,7 +7,8 @@
       "Bash(ipconfig getifaddr:*)",
       "Bash(networksetup -listallhardwareports:*)",
       "Bash(/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I)",
-      "Bash(system_profiler:*)"
+      "Bash(system_profiler:*)",
+      "Bash(python3:*)"
     ]
   }
 }
