@@ -203,9 +203,12 @@ void ButtonControl_LED_Toggle(uint8_t led_id)
 
 /* D-pad layout:
  *  BTN_0 (PB3)  → Forward  (all motors forward)
- *  BTN_1 (PB4)  → Left     (rotate left in place)
- *  BTN_2 (PC14) → Right    (rotate right in place)
+ *  BTN_1 (PB4)  → Left     (M0,M1=L-side reverse; M2,M3=R-side forward)
+ *  BTN_2 (PC14) → Right    (M0,M1=L-side forward; M2,M3=R-side reverse)
  *  BTN_3 (PC15) → Backward (all motors backward)
+ *
+ *  Motor layout: Driver1=LEFT side (M0=L-front, M1=L-rear)
+ *                Driver2=RIGHT side (M2=R-front, M3=R-rear)
  */
 
 #ifdef USE_UART_TELEMETRY
@@ -249,12 +252,12 @@ void ButtonControl_Update(void)
                 case 1: /* Left (rotate in place) */
                     printf("BTN_1 → ROTATE LEFT %d%%\n", MOTOR_DEFAULT_SPEED);
                     TB6612FNG_RotateLeft(MOTOR_DEFAULT_SPEED);
-                    SendAllMotors(MOTOR_REVERSE, MOTOR_FORWARD, MOTOR_REVERSE, MOTOR_FORWARD, MOTOR_DEFAULT_SPEED);
+                    SendAllMotors(MOTOR_REVERSE, MOTOR_REVERSE, MOTOR_FORWARD, MOTOR_FORWARD, MOTOR_DEFAULT_SPEED);
                     break;
                 case 2: /* Right (rotate in place) */
                     printf("BTN_2 → ROTATE RIGHT %d%%\n", MOTOR_DEFAULT_SPEED);
                     TB6612FNG_RotateRight(MOTOR_DEFAULT_SPEED);
-                    SendAllMotors(MOTOR_FORWARD, MOTOR_REVERSE, MOTOR_FORWARD, MOTOR_REVERSE, MOTOR_DEFAULT_SPEED);
+                    SendAllMotors(MOTOR_FORWARD, MOTOR_FORWARD, MOTOR_REVERSE, MOTOR_REVERSE, MOTOR_DEFAULT_SPEED);
                     break;
                 case 3: /* Backward */
                     printf("BTN_3 → BACKWARD %d%%\n", MOTOR_DEFAULT_SPEED);

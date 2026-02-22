@@ -90,7 +90,7 @@ void Telemetry_SendButton(uint8_t button_id, uint8_t is_pressed)
                        is_pressed ? "pressed" : "released");
 
     if (len > 0 && len < TELEMETRY_BUFFER_SIZE) {
-        HAL_UART_Transmit(&huart1, (uint8_t*)telemetry_buffer, len, 100);
+        HAL_UART_Transmit(&huart1, (uint8_t*)telemetry_buffer, len, 10);
     }
 }
 
@@ -112,7 +112,7 @@ void Telemetry_SendMotor(uint8_t motor_id, uint8_t direction, uint8_t speed)
                        motor_id, dir_str, speed);
 
     if (len > 0 && len < TELEMETRY_BUFFER_SIZE) {
-        HAL_UART_Transmit(&huart1, (uint8_t*)telemetry_buffer, len, 100);
+        HAL_UART_Transmit(&huart1, (uint8_t*)telemetry_buffer, len, 10);
     }
 }
 
@@ -130,7 +130,7 @@ void Telemetry_SendAllMotors(uint8_t* motor_states, uint8_t* motor_speeds)
                        motor_states[3] ? "running" : "stopped", motor_speeds[3]);
 
     if (len > 0 && len < TELEMETRY_BUFFER_SIZE) {
-        HAL_UART_Transmit(&huart1, (uint8_t*)telemetry_buffer, len, 100);
+        HAL_UART_Transmit(&huart1, (uint8_t*)telemetry_buffer, len, 10);
     }
 }
 
@@ -145,7 +145,7 @@ void Telemetry_SendRPM(uint8_t motor_id, float rpm)
                        motor_id, rpm);
 
     if (len > 0 && len < TELEMETRY_BUFFER_SIZE) {
-        HAL_UART_Transmit(&huart1, (uint8_t*)telemetry_buffer, len, 100);
+        HAL_UART_Transmit(&huart1, (uint8_t*)telemetry_buffer, len, 10);
     }
 }
 
@@ -159,7 +159,7 @@ void Telemetry_SendJSON(const char* json_string)
         HAL_UART_Transmit(&huart1, (uint8_t*)json_string, len, HAL_MAX_DELAY);
         // Add newline if not present
         if (json_string[len - 1] != '\n') {
-            HAL_UART_Transmit(&huart1, (uint8_t*)"\n", 1, 100);
+            HAL_UART_Transmit(&huart1, (uint8_t*)"\n", 1, 10);
         }
     }
 }
@@ -171,6 +171,6 @@ void Telemetry_SendString(const char* message)
 {
     int len = strlen(message);
     if (len > 0) {
-        HAL_UART_Transmit(&huart1, (uint8_t*)message, len, 100);
+        HAL_UART_Transmit(&huart1, (uint8_t*)message, len, 10);
     }
 }

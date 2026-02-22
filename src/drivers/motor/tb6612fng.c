@@ -290,12 +290,12 @@ void TB6612FNG_TurnLeft(uint8_t speed, uint8_t turn_ratio) {
     // Calculate left side speed (reduced)
     uint8_t left_speed = speed * (100 - turn_ratio) / 100;
 
-    // Left side (motors 0, 2) slower
+    // Left side (motors 0, 1) slower
     TB6612FNG_Drive(MOTOR_0, MOTOR_FORWARD, left_speed);
-    TB6612FNG_Drive(MOTOR_2, MOTOR_FORWARD, left_speed);
+    TB6612FNG_Drive(MOTOR_1, MOTOR_FORWARD, left_speed);
 
-    // Right side (motors 1, 3) normal speed
-    TB6612FNG_Drive(MOTOR_1, MOTOR_FORWARD, speed);
+    // Right side (motors 2, 3) normal speed
+    TB6612FNG_Drive(MOTOR_2, MOTOR_FORWARD, speed);
     TB6612FNG_Drive(MOTOR_3, MOTOR_FORWARD, speed);
 }
 
@@ -305,28 +305,28 @@ void TB6612FNG_TurnRight(uint8_t speed, uint8_t turn_ratio) {
     // Calculate right side speed (reduced)
     uint8_t right_speed = speed * (100 - turn_ratio) / 100;
 
-    // Left side (motors 0, 2) normal speed
+    // Left side (motors 0, 1) normal speed
     TB6612FNG_Drive(MOTOR_0, MOTOR_FORWARD, speed);
-    TB6612FNG_Drive(MOTOR_2, MOTOR_FORWARD, speed);
+    TB6612FNG_Drive(MOTOR_1, MOTOR_FORWARD, speed);
 
-    // Right side (motors 1, 3) slower
-    TB6612FNG_Drive(MOTOR_1, MOTOR_FORWARD, right_speed);
+    // Right side (motors 2, 3) slower
+    TB6612FNG_Drive(MOTOR_2, MOTOR_FORWARD, right_speed);
     TB6612FNG_Drive(MOTOR_3, MOTOR_FORWARD, right_speed);
 }
 
 void TB6612FNG_RotateLeft(uint8_t speed) {
-    // Left side reverse, right side forward
+    // Left side (0, 1) reverse, right side (2, 3) forward
     TB6612FNG_Drive(MOTOR_0, MOTOR_REVERSE, speed);
-    TB6612FNG_Drive(MOTOR_2, MOTOR_REVERSE, speed);
-    TB6612FNG_Drive(MOTOR_1, MOTOR_FORWARD, speed);
+    TB6612FNG_Drive(MOTOR_1, MOTOR_REVERSE, speed);
+    TB6612FNG_Drive(MOTOR_2, MOTOR_FORWARD, speed);
     TB6612FNG_Drive(MOTOR_3, MOTOR_FORWARD, speed);
 }
 
 void TB6612FNG_RotateRight(uint8_t speed) {
-    // Left side forward, right side reverse
+    // Left side (0, 1) forward, right side (2, 3) reverse
     TB6612FNG_Drive(MOTOR_0, MOTOR_FORWARD, speed);
-    TB6612FNG_Drive(MOTOR_2, MOTOR_FORWARD, speed);
-    TB6612FNG_Drive(MOTOR_1, MOTOR_REVERSE, speed);
+    TB6612FNG_Drive(MOTOR_1, MOTOR_FORWARD, speed);
+    TB6612FNG_Drive(MOTOR_2, MOTOR_REVERSE, speed);
     TB6612FNG_Drive(MOTOR_3, MOTOR_REVERSE, speed);
 }
 

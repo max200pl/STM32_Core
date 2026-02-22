@@ -206,28 +206,54 @@ static void HandleRemoteCommand(const char *cmd)
     if (action == 'F') {
         sscanf(cmd + 4, "%d", &speed);
         TB6612FNG_MoveForward((uint8_t)speed);
-        /* Forward: all LEDs on */
         for (uint8_t i = 0; i < 4; i++) ButtonControl_LED_On(i);
+        #ifdef USE_UART_TELEMETRY
+        Telemetry_SendMotor(0, MOTOR_FORWARD, (uint8_t)speed);
+        Telemetry_SendMotor(1, MOTOR_FORWARD, (uint8_t)speed);
+        Telemetry_SendMotor(2, MOTOR_FORWARD, (uint8_t)speed);
+        Telemetry_SendMotor(3, MOTOR_FORWARD, (uint8_t)speed);
+        #endif
     } else if (action == 'B') {
         sscanf(cmd + 4, "%d", &speed);
         TB6612FNG_MoveBackward((uint8_t)speed);
-        /* Backward: all LEDs on */
         for (uint8_t i = 0; i < 4; i++) ButtonControl_LED_On(i);
+        #ifdef USE_UART_TELEMETRY
+        Telemetry_SendMotor(0, MOTOR_REVERSE, (uint8_t)speed);
+        Telemetry_SendMotor(1, MOTOR_REVERSE, (uint8_t)speed);
+        Telemetry_SendMotor(2, MOTOR_REVERSE, (uint8_t)speed);
+        Telemetry_SendMotor(3, MOTOR_REVERSE, (uint8_t)speed);
+        #endif
     } else if (action == 'L') {
         sscanf(cmd + 4, "%d", &speed);
-        TB6612FNG_TurnLeft((uint8_t)speed, 60);
-        /* Left turn indicator: left side (0,2) on, right side (1,3) off */
-        ButtonControl_LED_On(0);  ButtonControl_LED_Off(1);
-        ButtonControl_LED_On(2);  ButtonControl_LED_Off(3);
+        TB6612FNG_RotateLeft((uint8_t)speed);
+        ButtonControl_LED_On(0);  ButtonControl_LED_On(1);
+        ButtonControl_LED_Off(2); ButtonControl_LED_Off(3);
+        #ifdef USE_UART_TELEMETRY
+        Telemetry_SendMotor(0, MOTOR_REVERSE, (uint8_t)speed);
+        Telemetry_SendMotor(1, MOTOR_REVERSE, (uint8_t)speed);
+        Telemetry_SendMotor(2, MOTOR_FORWARD, (uint8_t)speed);
+        Telemetry_SendMotor(3, MOTOR_FORWARD, (uint8_t)speed);
+        #endif
     } else if (action == 'R') {
         sscanf(cmd + 4, "%d", &speed);
-        TB6612FNG_TurnRight((uint8_t)speed, 60);
-        /* Right turn indicator: right side (1,3) on, left side (0,2) off */
-        ButtonControl_LED_Off(0); ButtonControl_LED_On(1);
-        ButtonControl_LED_Off(2); ButtonControl_LED_On(3);
+        TB6612FNG_RotateRight((uint8_t)speed);
+        ButtonControl_LED_Off(0); ButtonControl_LED_Off(1);
+        ButtonControl_LED_On(2);  ButtonControl_LED_On(3);
+        #ifdef USE_UART_TELEMETRY
+        Telemetry_SendMotor(0, MOTOR_FORWARD, (uint8_t)speed);
+        Telemetry_SendMotor(1, MOTOR_FORWARD, (uint8_t)speed);
+        Telemetry_SendMotor(2, MOTOR_REVERSE, (uint8_t)speed);
+        Telemetry_SendMotor(3, MOTOR_REVERSE, (uint8_t)speed);
+        #endif
     } else if (action == 'S') {
         TB6612FNG_StopAll();
         for (uint8_t i = 0; i < 4; i++) ButtonControl_LED_Off(i);
+        #ifdef USE_UART_TELEMETRY
+        Telemetry_SendMotor(0, MOTOR_STOP, 0);
+        Telemetry_SendMotor(1, MOTOR_STOP, 0);
+        Telemetry_SendMotor(2, MOTOR_STOP, 0);
+        Telemetry_SendMotor(3, MOTOR_STOP, 0);
+        #endif
     } else if (action == 'M') {
         int motor_id; char dir_c;
         if (sscanf(cmd + 4, "%d:%c:%d", &motor_id, &dir_c, &speed) == 3) {
@@ -238,6 +264,9 @@ static void HandleRemoteCommand(const char *cmd)
                 ButtonControl_LED_Off((uint8_t)motor_id);
             else
                 ButtonControl_LED_On((uint8_t)motor_id);
+            #ifdef USE_UART_TELEMETRY
+            Telemetry_SendMotor((uint8_t)motor_id, (uint8_t)dir, (uint8_t)speed);
+            #endif
         }
     }
 }
